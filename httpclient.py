@@ -41,13 +41,17 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        data = data.split('\r\n')
+        code = data[0].split(' ')
+        return int(code[1])
 
     def get_headers(self,data):
-        return None
+        return data.split('\r\n\r\n')[0]
 
     def get_body(self, data):
-        return None
+        if len(data.split('\r\n\r\n')) == 2:
+            return data.split('\r\n\r\n')[1]
+        return ''
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -68,13 +72,58 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        r = urllib.parse.urlparse(url)
+        path = r.path
+
+        if ':' in r.netloc:
+            self.connect(r.netloc.split(':')[0], int(r.netloc.split(':')[1]))
+        else:
+            self.connect('127.0.0.1', 8001)
+
+        host = "Host: " + r.netloc + '\r\n'
+        header = 'GET ' + path + ' HTTP/1.1\r\n' + host + '\r\n'
+        self.sendall(header)
+
+        data = self.recvall(self.socket)
+        re_header = self.get_headers(data)
+        body = self.get_body(data)
+        code = self.get_code(re_header)
+
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        r = urllib.parse.urlparse(url)
+        path = r.path
+
+        if ':' in r.netloc:
+            self.connect(r.netloc.split(':')[0], int(r.netloc.split(':')[1]))
+        else:
+            self.connect('127.0.0.1', 8080)
+
+        host = "Host: " + r.netloc + '\r\n'
+        header = 'POST ' + path + ' HTTP/1.1\r\n' + host
+        if args != None:
+            content = '&'.join([i+'='+args[i] for i in args])
+            content_length = "Content-Length: " + str(len(content.encode('utf-8'))) + '\r\n'
+            content_type = "Content-Type: application/x-ww-form-urlencoded\r\n"
+            header += content_length + content_type + '\r\n' + content + '\r\n'
+        else:
+            header += "Content-Length: 0\r\nContent-Type: application/x-ww-form-urlencoded\r\n\r\n"
+        self.sendall(header)
+        # print("=============================")
+        # print("header = ", header)
+
+        data = self.recvall(self.socket)
+        re_header = self.get_headers(data)
+        
+        # print("data = ", data)
+        # print("response header = ", re_header)
+        body = self.get_body(data)
+        code = self.get_code(re_header)
+        
+        # print("body = ", body)
+        # print("code = ", code)
+        # print()
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
