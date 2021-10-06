@@ -33,7 +33,10 @@ class HTTPResponse(object):
         self.body = body
 
 class HTTPClient(object):
-    #def get_host_port(self,url):
+    def get_host_port(self,url):
+        if ':' in url.netloc:
+            return url.netloc.split(':')[0], int(url.netloc.split(':')[1])
+        return url.netloc, 80
 
     def connect(self, host, port):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -79,10 +82,8 @@ class HTTPClient(object):
         r = urllib.parse.urlparse(url)
         path = r.path
         # connect
-        if ':' in r.netloc:
-            self.connect(r.netloc.split(':')[0], int(r.netloc.split(':')[1]))
-        else:
-            self.connect(r.netloc, 80)
+        host, port = self.get_host_port(r)
+        self.connect(host, port)
         # send request
         host = "Host: " + r.netloc + '\r\n'
         header = 'GET ' + path + ' HTTP/1.1\r\n' + host + 'Connection: close\r\n\r\n'
@@ -98,15 +99,13 @@ class HTTPClient(object):
         r = urllib.parse.urlparse(url)
         path = r.path
         # connect
-        if ':' in r.netloc:
-            self.connect(r.netloc.split(':')[0], int(r.netloc.split(':')[1]))
-        else:
-            self.connect(r.netloc, 80)
+        host, port = self.get_host_port(r)
+        self.connect(host, port)
         # send request
         host = "Host: " + r.netloc + '\r\n'
         header = 'POST ' + path + ' HTTP/1.1\r\n' + host
-        # get content
-        if args != None:
+        
+        if args != None: # get content-length & content-type
             content = '&'.join([i+'='+args[i] for i in args])
             content_length = "Content-Length: " + str(len(content.encode('utf-8'))) + '\r\n'
             content_type = "Content-Type: application/x-ww-form-urlencoded\r\n"
