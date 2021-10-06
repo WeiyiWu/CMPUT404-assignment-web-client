@@ -86,8 +86,8 @@ class HTTPClient(object):
         self.connect(host, port)
         # send request
         host = "Host: " + r.netloc + '\r\n'
-        header = 'GET ' + path + ' HTTP/1.1\r\n' + host + 'Connection: close\r\n\r\n'
-        self.sendall(header)
+        request = 'GET ' + path + ' HTTP/1.1\r\n' + host + 'Connection: close\r\n\r\n'
+        self.sendall(request)
         # get response
         data = self.recvall(self.socket)
         body, code = self.get_datas(data)
@@ -103,16 +103,16 @@ class HTTPClient(object):
         self.connect(host, port)
         # send request
         host = "Host: " + r.netloc + '\r\n'
-        header = 'POST ' + path + ' HTTP/1.1\r\n' + host
+        request = 'POST ' + path + ' HTTP/1.1\r\n' + host
         
         if args != None: # get content-length & content-type
             content = '&'.join([i+'='+args[i] for i in args])
             content_length = "Content-Length: " + str(len(content.encode('utf-8'))) + '\r\n'
             content_type = "Content-Type: application/x-ww-form-urlencoded\r\n"
-            header += content_length + content_type + '\r\n' + content + '\r\n'
+            request += content_length + content_type + '\r\n' + content + '\r\n'
         else:
-            header += "Content-Length: 0\r\nContent-Type: application/x-ww-form-urlencoded\r\n\r\n"
-        self.sendall(header)
+            request += "Content-Length: 0\r\nContent-Type: application/x-ww-form-urlencoded\r\n\r\n"
+        self.sendall(request)
         # get response
         data = self.recvall(self.socket)
         body, code = self.get_datas(data)
