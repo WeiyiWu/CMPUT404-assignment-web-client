@@ -81,6 +81,8 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         r = urllib.parse.urlparse(url)
         path = r.path
+        if len(path)==0 or path[0]!='/':
+            path = '/' + path
         # connect
         host, port = self.get_host_port(r)
         self.connect(host, port)
@@ -91,6 +93,7 @@ class HTTPClient(object):
         # get response
         data = self.recvall(self.socket)
         body, code = self.get_datas(data)
+        print(data)
         # close connection
         self.close()
         return HTTPResponse(code, body)
@@ -98,6 +101,8 @@ class HTTPClient(object):
     def POST(self, url, args=None):
         r = urllib.parse.urlparse(url)
         path = r.path
+        if len(path)==0 or path[0]!='/':
+            path = '/' + path
         # connect
         host, port = self.get_host_port(r)
         self.connect(host, port)
@@ -116,6 +121,7 @@ class HTTPClient(object):
         # get response
         data = self.recvall(self.socket)
         body, code = self.get_datas(data)
+        print(data)
         # close connection
         self.close()
         return HTTPResponse(code, body)
